@@ -683,7 +683,6 @@ static char ja_kvoContext;
 }
 
 - (void)_loadLeftPanel {
-    self.rightPanelContainer.hidden = YES;
     if (self.leftPanelContainer.hidden && self.leftPanel) {
         
         if (!_leftPanel.view.superview) {
@@ -698,7 +697,6 @@ static char ja_kvoContext;
 }
 
 - (void)_loadRightPanel {
-    self.leftPanelContainer.hidden = YES;
     if (self.rightPanelContainer.hidden && self.rightPanel) {
         
         if (!_rightPanel.view.superview) {
@@ -799,6 +797,7 @@ static char ja_kvoContext;
 		}
     }
     _centerPanelRestingFrame = frame;
+    _locationBeforePan = _centerPanelRestingFrame.origin;
     return _centerPanelRestingFrame;
 }
 
@@ -827,7 +826,11 @@ static char ja_kvoContext;
     [self _adjustCenterFrame];
     
     if (animated) {
-        [self _animateCenterPanel:shouldBounce completion:nil];
+        [self _animateCenterPanel:shouldBounce completion:^(BOOL finished) {
+            self.leftPanelContainer.hidden = NO;
+            self.rightPanelContainer.hidden = YES;
+            [self _unloadPanels];
+        }];
     } else {
         self.centerPanelContainer.frame = _centerPanelRestingFrame;	
         [self styleContainer:self.centerPanelContainer animate:NO duration:0.0f];
@@ -849,7 +852,11 @@ static char ja_kvoContext;
     [self _adjustCenterFrame];
     
     if (animated) {
-        [self _animateCenterPanel:shouldBounce completion:nil];
+        [self _animateCenterPanel:shouldBounce completion:^(BOOL finished) {
+            self.leftPanelContainer.hidden = YES;
+            self.rightPanelContainer.hidden = NO;
+            [self _unloadPanels];
+        }];
     } else {
         self.centerPanelContainer.frame = _centerPanelRestingFrame;	
         [self styleContainer:self.centerPanelContainer animate:NO duration:0.0f];
@@ -986,7 +993,7 @@ static char ja_kvoContext;
 - (void)toggleLeftPanel:(__unused id)sender {
     if (self.state == JASidePanelLeftVisible) {
         [self _showCenterPanel:YES bounce:NO];
-    } else if (self.state == JASidePanelCenterVisible) {
+    } else if (self.state == JASidePanelCenterVisible || self.state == JASidePanelRightVisible) {
         [self _showLeftPanel:YES bounce:NO];
     }
 }
@@ -994,7 +1001,7 @@ static char ja_kvoContext;
 - (void)toggleRightPanel:(__unused id)sender {
     if (self.state == JASidePanelRightVisible) {
         [self _showCenterPanel:YES bounce:NO];
-    } else if (self.state == JASidePanelCenterVisible) {
+    } else if (self.state == JASidePanelCenterVisible|| self.state == JASidePanelLeftVisible) {
         [self _showRightPanel:YES bounce:NO];
     }
 }
