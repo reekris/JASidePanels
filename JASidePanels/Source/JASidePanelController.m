@@ -518,8 +518,10 @@ static char ja_kvoContext;
         if (self.style == JASidePanelMultipleActive || self.pushesSidePanels) {
             [self _layoutSideContainers:NO duration:0];
         }
-        
-        if (sender.state == UIGestureRecognizerStateEnded) {
+        if(sender.state == UIGestureRecognizerStateChanged) {
+            CGFloat fullyVisibleWidth = frame.origin.x > 0.0f ? self.leftVisibleWidth : -self.rightVisibleWidth;
+            [self willPanToSidePanelVisiblePercent:(frame.origin.x / fullyVisibleWidth) duration:0.0f];
+        } else if (sender.state == UIGestureRecognizerStateEnded) {
             CGFloat deltaX =  frame.origin.x - _locationBeforePan.x;			
             if ([self _validateThreshold:deltaX]) {
                 [self _completePan:deltaX];
@@ -568,6 +570,8 @@ static char ja_kvoContext;
 		}
     }
 }
+
+- (void)willPanToSidePanelVisiblePercent:(CGFloat)percent duration:(CGFloat)duration {}
 
 #pragma mark - Tap Gesture
 
@@ -750,6 +754,8 @@ static char ja_kvoContext;
     }
     
     CGFloat duration = [self _calculatedDuration];
+    CGFloat sidePanelVisiblePercent = _centerPanelRestingFrame.origin.x == 0.0f ? 0.0f : 1.0f;
+    [self willPanToSidePanelVisiblePercent:sidePanelVisiblePercent duration:duration];
     [UIView animateWithDuration:duration delay:0.0f options:UIViewAnimationOptionCurveLinear|UIViewAnimationOptionLayoutSubviews|UIViewAnimationOptionBeginFromCurrentState animations:^{
         self.centerPanelContainer.frame = _centerPanelRestingFrame;
         [self styleContainer:self.centerPanelContainer animate:YES duration:duration];
@@ -846,6 +852,7 @@ static char ja_kvoContext;
             [self _unloadPanels];
         }];
     } else {
+        [self willPanToSidePanelVisiblePercent:1.0f duration:0.0f];
         self.centerPanelContainer.frame = _centerPanelRestingFrame;	
         [self styleContainer:self.centerPanelContainer animate:NO duration:0.0f];
         if (self.style == JASidePanelMultipleActive || self.pushesSidePanels) {
@@ -872,6 +879,7 @@ static char ja_kvoContext;
             [self _unloadPanels];
         }];
     } else {
+        [self willPanToSidePanelVisiblePercent:1.0f duration:0.0f];
         self.centerPanelContainer.frame = _centerPanelRestingFrame;	
         [self styleContainer:self.centerPanelContainer animate:NO duration:0.0f];
         if (self.style == JASidePanelMultipleActive || self.pushesSidePanels) {
@@ -897,6 +905,7 @@ static char ja_kvoContext;
             [self _unloadPanels];
         }];
     } else {
+        [self willPanToSidePanelVisiblePercent:0.0f duration:0.0f];
         self.centerPanelContainer.frame = _centerPanelRestingFrame;	
         [self styleContainer:self.centerPanelContainer animate:NO duration:0.0f];
         if (self.style == JASidePanelMultipleActive || self.pushesSidePanels) {
